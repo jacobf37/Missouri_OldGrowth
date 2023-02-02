@@ -1,0 +1,40 @@
+---
+title: "Site_Visits"
+output: html_document
+date: "2023-02-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+suppressPackageStartupMessages({
+  library(raster)
+  library(leaflet)
+  library(leaflet.providers)
+  library(leafpop)
+  library(sf)
+})
+```
+```{r pressure, echo=FALSE}
+pic_files <- list.files(path = './Photos', pattern = '*.jpg|*.JPG|*.png|*.PNG', full.names = T)
+exif <- exifr::read_exif(pic_files) %>% 
+  dplyr::select(SourceFile, LON = GPSLongitude, LAT = GPSLatitude) %>% 
+  as.data.frame()
+
+```
+
+```{r cars}
+track <- read_sf(dsn = '../Tracks', layer = 'Layer 3') %>% st_zm
+track <- st_transform(track, 4326)
+m <- leaflet() %>% setView(lng = -91.454, lat = 37.16, zoom = 14) %>% 
+  addProviderTiles(provider = providers$Esri.WorldTopoMap) %>% 
+  addPolygons(data = track$geometry, color = 'blue', fillColor = "transparent") %>% 
+  addMarkers(data = exif, lng = exif$LON, lat = exif$LAT, popup = popupImage(exif$SourceFile))
+m
+```
+
+
+
+
