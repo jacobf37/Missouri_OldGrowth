@@ -1,0 +1,33 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r Load packages, message=FALSE, warning=FALSE}
+library(raster)
+library(soilDB)
+library(sf)
+library(elevatr)
+library(tidyverse)
+```
+
+```{r}
+site_shp <- st_read('../Natural Areas.shp', crs = 26915)
+#plot(site_shp["Name"])
+```
+```{r}
+res <- SDA_spatialQuery(site_shp, what = 'mupolygon', 
+                        db = 'SSURGO', byFeature = T, geomIntersection = T)
+res <- res %>% left_join(site_shp %>% as_tibble() %>% select(Name) %>% mutate(gid = row_number()), by = 'gid')
+plot(res[res$gid == 7,]['mukey'])
+```
+
+```{r}
+mu.is <- format_SQL_in_statement(res$mukey)
+
+mapunit_q <- paste0("SELECT mukey, muname, mukind 
+                  FROM mapunit WHERE mukey IN ", mu.is)
+
+mu_res <- SDA_query(mapunit_q)
+```
+
